@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src",
+    "games",
+    "about",
+    "team",
+    "attributions",
+    "human-practices",
+    "education",
+    "vite.config.ts",
+    "site.json"
+  ]
+}
