@@ -1,0 +1,420 @@
+.lx-shell {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.lx-objective {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(226, 195, 122, 0.35);
+  background: rgba(226, 195, 122, 0.08);
+  max-width: 40rem;
+}
+
+.lx-objective h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+.lx-objective-body {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.lx-explore-goal {
+  margin-bottom: 0.35rem;
+}
+
+.lx-next-hint {
+  margin: 0.35rem 0 0.55rem;
+  padding: 0.45rem 0.55rem;
+  background: rgba(94, 196, 209, 0.12);
+  border: 1px solid rgba(94, 196, 209, 0.35);
+  border-radius: 6px;
+  font-size: 0.92rem;
+}
+
+.lx-steps {
+  margin: 0 0 0.75rem;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
+.lx-legend {
+  margin-top: 0.55rem;
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+
+.lx-menu {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 36rem;
+}
+
+.lx-menu label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.lx-menu input {
+  padding: 0.45rem 0.6rem;
+}
+
+.lx-menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lx-muted {
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.lx-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+
+.lx-board-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.35rem 0;
+}
+
+.lx-task {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: min(92%, 24rem);
+  max-width: 26rem;
+  padding: 1rem 1.1rem;
+  background: rgba(10, 14, 12, 0.94);
+  border: 1px solid rgba(226, 195, 122, 0.35);
+  display: grid;
+  gap: 0.65rem;
+  z-index: 5;
+}
+
+.lx-task[hidden] {
+  display: none !important;
+}
+
+.lx-task-head h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.lx-task-how {
+  margin: 0 0 0.55rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  opacity: 0.88;
+}
+
+.lx-task-timer-row {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lx-task-bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.lx-task-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #5ec4d1, #6ecf8a);
+}
+
+.lx-task-progress {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.lx-task-feedback {
+  margin: 0.25rem 0 0;
+  color: #f0a0a0;
+  font-size: 0.88rem;
+}
+
+.lx-task-target {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.lx-task-options {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.lx-hold-btn {
+  min-height: 3rem;
+  font-size: 1.05rem;
+}
+
+.lx-room-banner {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 0.55rem 1.1rem;
+  background: rgba(8, 12, 10, 0.82);
+  border: 1px solid rgba(226, 195, 122, 0.45);
+  letter-spacing: 0.06em;
+  font-size: 0.95rem;
+  pointer-events: none;
+  animation: lx-banner-in 0.35s ease-out;
+}
+
+.lx-room-banner[hidden] {
+  display: none !important;
+}
+
+@keyframes lx-banner-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.lx-stage[data-threat='1']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: inset 0 0 80px rgba(180, 40, 40, 0.35);
+}
+
+.lx-score {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.lx-debrief-row {
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lx-eyebrow {
+  margin: 0;
+  font: 600 0.72rem/1 ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+
+.lx-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.lx-header h1 {
+  margin: 0.2rem 0 0.35rem;
+  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+}
+
+.lx-lead {
+  margin: 0;
+  max-width: 40rem;
+  opacity: 0.85;
+}
+
+.lx-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.lx-landscape {
+  display: none;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  background: rgba(226, 195, 122, 0.15);
+  border: 1px solid rgba(226, 195, 122, 0.35);
+  font-size: 0.9rem;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  .lx-landscape {
+    display: block;
+  }
+}
+
+.lx-stage {
+  position: relative;
+  width: 100%;
+  min-height: min(74vh, 720px);
+  height: min(74vh, 720px);
+  background: #0b0e0c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  touch-action: none;
+}
+
+.lx-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.lx-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  max-width: min(90%, 28rem);
+  padding: 0.4rem 0.75rem;
+  background: rgba(8, 12, 10, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.9rem;
+  pointer-events: none;
+  text-align: center;
+}
+
+.lx-prompt[data-near='1'] {
+  background: rgba(28, 72, 42, 0.88);
+  border-color: rgba(170, 230, 160, 0.45);
+  color: #e8ffe8;
+}
+
+.lx-mobile {
+  display: none;
+  pointer-events: none;
+}
+
+.lx-joystick,
+.lx-aim-pad,
+.lx-interact-btn {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.lx-joystick {
+  position: absolute;
+  left: calc(0.75rem + env(safe-area-inset-left, 0px));
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.lx-joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  background: rgba(110, 207, 138, 0.85);
+}
+
+.lx-aim-pad {
+  position: absolute;
+  right: calc(0.75rem + env(safe-area-inset-right, 0px));
+  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+
+.lx-interact-btn {
+  position: absolute;
+  right: calc(0.75rem + env(safe-area-inset-right, 0px));
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  min-width: 96px;
+  min-height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(200, 160, 70, 0.85);
+  color: #1a1408;
+  font-weight: 700;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .lx-mobile {
+    display: block;
+  }
+  .lx-prompt {
+    bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.lx-pause {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 0.75rem;
+  background: rgba(6, 8, 7, 0.78);
+  text-align: center;
+  padding: 1rem;
+}
+
+.lx-pause[hidden] {
+  display: none !important;
+}
+
+.lx-a11y {
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.9rem;
+}
+
+.lx-a11y p {
+  margin: 0.25rem 0;
+}
+
+.lx-toggle {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin: 0.65rem 0;
+}
+
+html.high-contrast .lx-stage {
+  border-color: #fff;
+}
+
+html.reduced-effects .lx-joystick-knob {
+  transition: none;
+}
