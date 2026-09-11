@@ -21,11 +21,18 @@ async function resetSpectrum(page: import('@playwright/test').Page) {
   await expect(page.getByTestId('ready')).toBeVisible();
 }
 
+async function openAdvanced(page: import('@playwright/test').Page) {
+  await page.locator('#advanced').evaluate((el: HTMLDetailsElement) => {
+    el.open = true;
+  });
+}
+
 async function startEasyPractice(
   page: import('@playwright/test').Page,
   seed = FIXED_SEED,
 ) {
-  await page.getByTestId('difficulty').selectOption('easy');
+  await page.getByTestId('level-easy').click();
+  await openAdvanced(page);
   await page.getByTestId('seed').fill(seed);
   await page.getByTestId('start').click();
 }
@@ -108,7 +115,7 @@ test.describe('Scent Spectrum wiki', () => {
 
     await page.locator('.lang-switch [data-locale="en"]').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByTestId('start')).toContainText(/Start practice/i);
+    await expect(page.getByTestId('start')).toContainText(/Start Game/i);
 
     await page.locator('.lang-switch [data-locale="zh-Hant"]').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hant');
@@ -116,6 +123,12 @@ test.describe('Scent Spectrum wiki', () => {
     await startEasyPractice(page);
     await completeOrSkipTutorial(page);
     await expect(page.getByTestId('mix-count')).toBeVisible();
+    await expect(page.getByTestId('pattern-stack')).toBeVisible();
+    const playCanvasWidths = await page
+      .locator('[data-testid="pattern-stack"] canvas.sp-canvas')
+      .evaluateAll((els) => els.map((el) => Math.round(el.clientWidth)));
+    expect(playCanvasWidths.length).toBeGreaterThan(1);
+    expect(new Set(playCanvasWidths).size).toBe(1);
 
     if (truth.components.length === 2) {
       await setGuess(
@@ -124,6 +137,14 @@ test.describe('Scent Spectrum wiki', () => {
       );
       await expect(page.getByTestId('sum')).toHaveText('100');
       await page.getByTestId('submit').click();
+      await expect(page.getByTestId('feedback')).toHaveAttribute('data-ab', '0A2B');
+      await expect(page.getByTestId('last-guess')).toBeVisible();
+      await expect(page.getByTestId('last-guess-mix')).toBeVisible();
+      await expect(page.getByTestId('guess-chart')).toBeVisible();
+      await expect(page.locator('#targetCanvas')).toBeVisible();
+      await expect(page.getByTestId('more-details')).not.toHaveAttribute('open');
+      await page.locator('[data-testid="more-details"] > summary').click();
+      await page.getByTestId('tech-details').locator('summary').click();
       await expect(page.getByTestId('ab-result')).toContainText('0A2B');
       await page.getByTestId('toggle-history').click();
       await expect(page.getByTestId('history')).toContainText('0A2B');
@@ -136,6 +157,12 @@ test.describe('Scent Spectrum wiki', () => {
     await page.getByTestId('submit').click();
     await expect(page.getByTestId('result')).toHaveAttribute('data-solved', 'true');
     await expect(page.getByTestId('truth')).toBeVisible();
+    await expect(page.getByTestId('result-patterns')).toBeVisible();
+    const resultCanvasWidths = await page
+      .locator('[data-testid="result-patterns"] canvas.sp-canvas')
+      .evaluateAll((els) => els.map((el) => Math.round(el.clientWidth)));
+    expect(resultCanvasWidths.length).toBeGreaterThan(1);
+    expect(new Set(resultCanvasWidths).size).toBe(1);
 
     // Failure reveal
     await page.getByTestId('to-setup').click();
@@ -191,6 +218,7 @@ test.describe('Scent Spectrum wiki', () => {
     // Keyboard-only
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.getByTestId('to-setup').click();
+    await openAdvanced(page);
     await page.getByTestId('seed').fill(FIXED_SEED);
     await page.getByTestId('start').focus();
     await page.keyboard.press('Enter');
@@ -202,5 +230,141 @@ test.describe('Scent Spectrum wiki', () => {
     await page.getByTestId('submit').focus();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('result')).toHaveAttribute('data-solved', 'true');
+  });
+
+  test('junior mixer, hints autofill a legal mix, default difficulty, no overflow', async ({
+    page,
+  }) => {
+    const session = buildPracticeSpectrumSession({
+      difficulty: 'junior',
+      signatures: SIGS,
+      odorIds: ALL_IDS,
+      contentVersion: SPECTRUM_CONTENT_VERSION,
+      seed: FIXED_SEED,
+    });
+    const truth = session.puzzle.truth;
+    expect(truth.components).toHaveLength(2);
+    expect(session.puzzle.poolIds).toHaveLength(4);
+
+    await resetSpectrum(page);
+    await expect(page.getByTestId('level-junior')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('#sp-title')).toContainText(/氣味指紋混合器|Scent Mixer/);
+
+    await page.locator('.lang-switch [data-locale="en"]').click();
+    await page.locator('#guideButton').click();
+    await expect(page.getByTestId('how-cards')).toBeVisible();
+    await expect(page.getByTestId('how-cards')).toContainText('Choose scents');
+    await page.locator('#guideDialog [data-close="guideDialog"]').first().click();
+
+    await page.getByTestId('level-junior').click();
+    await openAdvanced(page);
+    await page.getByTestId('seed').fill(FIXED_SEED);
+    await page.getByTestId('start').click();
+    await completeOrSkipTutorial(page);
+
+    await expect(page.getByTestId('play')).toHaveClass(/is-junior/);
+    await expect(page.getByTestId('pattern-stack')).toBeVisible();
+    await expect(page.getByTestId('junior-builder')).toBeVisible();
+    await expect(page.locator('[data-num]')).toHaveCount(0);
+    await expect(page.locator('[data-range]')).toHaveCount(0);
+    await page.locator('[data-testid="more-details"] > summary').click();
+    await expect(page.getByTestId('channel-note')).toHaveText(
+      'These are receptor-response channels, not a light spectrum.',
+    );
+    await page.locator('[data-testid="more-details"] > summary').click();
+
+    const first = truth.components[0]!;
+    const second = truth.components[1]!;
+    await page.getByTestId(`odor-card-${first.odorId}`).click();
+    await page.getByTestId(`odor-card-${second.odorId}`).click();
+    await expect(page.getByTestId(`odor-card-${first.odorId}`)).toHaveClass(/is-picked/);
+    await expect(page.getByTestId(`odor-card-${first.odorId}`)).not.toHaveClass(/is-hint-out/);
+    await expect(page.getByTestId(`odor-card-${second.odorId}`)).toHaveClass(/is-picked/);
+    const pickedOpacity = await page
+      .getByTestId(`odor-card-${first.odorId}`)
+      .evaluate((el) => Number(getComputedStyle(el).opacity));
+    expect(pickedOpacity).toBeGreaterThan(0.9);
+    await page.getByTestId(`ratio-${first.percent}-${second.percent}`).click();
+    await expect(page.getByTestId('sum')).toHaveText('100');
+    await page.getByTestId('submit').click();
+    await expect(page.getByTestId('result')).toHaveAttribute('data-solved', 'true');
+    await expect(page.getByTestId('discovered')).toContainText(/overlapping receptor-response/);
+    await page.locator('.result-copy .tech-details summary').click();
+    await expect(page.getByTestId('model-disclaimer')).toContainText(/educational simulations/);
+    await expect(page.getByTestId('time-score')).toHaveCount(0);
+
+    await page.getByTestId('to-setup').click();
+    await page.evaluate(() => {
+      const raw = localStorage.getItem('suite.spectrum.v1');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      data.tutorialSeen = true;
+      localStorage.setItem('suite.spectrum.v1', JSON.stringify(data));
+    });
+
+    await page.getByTestId('level-junior').click();
+    await openAdvanced(page);
+    await page.getByTestId('seed').fill(FIXED_SEED);
+    await page.getByTestId('start').click();
+    await expect(page.getByTestId('play')).toBeVisible();
+
+    await page.getByTestId('use-hint').click();
+    await page.getByTestId('use-hint').click();
+    await page.getByTestId('use-hint').click();
+    await expect(page.getByTestId('hint-mixes')).toBeVisible();
+    await page.getByTestId('hint-mix-0').click();
+    await expect(page.getByTestId('sum')).toHaveText('100');
+    await expect(page.getByTestId('submit')).toBeEnabled();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(8);
+
+    await page.setViewportSize({ width: 1280, height: 720 });
+    for (const id of session.puzzle.poolIds) {
+      const card = page.getByTestId(`odor-card-${id}`);
+      if ((await card.getAttribute('aria-pressed')) === 'true') {
+        await card.click();
+      }
+    }
+    await page.getByTestId(`odor-card-${first.odorId}`).focus();
+    await page.keyboard.press('Enter');
+    await page.getByTestId(`odor-card-${second.odorId}`).focus();
+    await page.keyboard.press('Enter');
+    await page.getByTestId(`ratio-${first.percent}-${second.percent}`).focus();
+    await page.keyboard.press('Enter');
+    await page.getByTestId('submit').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('result')).toHaveAttribute('data-solved', 'true');
+  });
+
+  test('switching difficulty or daily during a run returns to the start screen', async ({ page }) => {
+    await resetSpectrum(page);
+    await startEasyPractice(page);
+    await completeOrSkipTutorial(page);
+    await expect(page.getByTestId('play')).toBeVisible();
+
+    await page.getByTestId('level-junior').click();
+    await expect(page.getByTestId('ready')).toBeVisible();
+    await expect(page.getByTestId('play')).toHaveCount(0);
+    await expect(page.getByTestId('level-junior')).toHaveAttribute('aria-checked', 'true');
+
+    await page.locator('[data-mode="daily"]').click();
+    await expect(page.getByTestId('ready')).toBeVisible();
+    await page.locator('#advanced').evaluate((el: HTMLDetailsElement) => {
+      el.open = true;
+    });
+    await expect(page.getByTestId('daily-note')).toBeVisible();
+    await expect(page.getByTestId('seed')).toHaveCount(0);
+
+    await page.locator('[data-mode="practice"]').click();
+    await expect(page.getByTestId('ready')).toBeVisible();
+    await expect(page.getByTestId('seed')).toBeVisible();
+    await page.getByTestId('start').click();
+    await completeOrSkipTutorial(page);
+    await expect(page.getByTestId('play')).toBeVisible();
+    await expect(page.getByTestId('play')).toHaveClass(/is-junior/);
   });
 });
