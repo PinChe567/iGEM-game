@@ -5,6 +5,7 @@ export type {
   DistractorBias,
   DifficultySettings,
   SessionMode,
+  PixelLevelId,
   SessionMeta,
   CellKind,
   BuiltQuestion,
@@ -22,11 +23,23 @@ export {
 
 export {
   DEFAULT_PRACTICE_SETTINGS,
+  JUNIOR_SETTINGS,
+  CHALLENGE_SETTINGS,
   PIXEL_PRESETS,
+  PIXEL_JUNIOR_PRESET_ID,
+  PIXEL_STANDARD_PRESET_ID,
+  PIXEL_CHALLENGE_PRESET_ID,
+  PIXEL_LEVEL_IDS,
   listMatrixSizes,
   listNoisePercents,
+  listPixelPresetIds,
   getPreset,
   mergePracticeSettings,
+  isJuniorPreset,
+  isPixelLevelId,
+  effectivePatternDisplayMs,
+  usesTimedMemory,
+  dailyPresetIdForLevel,
 } from './presets';
 
 export {

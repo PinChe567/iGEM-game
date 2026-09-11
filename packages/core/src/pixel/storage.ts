@@ -12,6 +12,8 @@ export type PixelStoredState = {
   muted: boolean;
   reducedEffects: boolean;
   highContrast: boolean;
+  /** Interactive onboarding has been completed at least once. */
+  onboardingSeen: boolean;
   playedSeeds: string[];
   bestByPreset: Record<string, number>;
 };
@@ -22,6 +24,7 @@ export const DEFAULT_PIXEL_STORED_STATE: PixelStoredState = {
   muted: false,
   reducedEffects: false,
   highContrast: false,
+  onboardingSeen: false,
   playedSeeds: [],
   bestByPreset: {},
 };
@@ -59,6 +62,7 @@ export function migratePixelStoredState(raw: unknown): PixelStoredState {
     muted,
     reducedEffects,
     highContrast,
+    onboardingSeen: Boolean(data.onboardingSeen),
     playedSeeds,
     bestByPreset,
   };

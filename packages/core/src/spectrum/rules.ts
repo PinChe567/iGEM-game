@@ -1,8 +1,8 @@
 import type { SpectrumRuleSet } from './types';
 import { SPECTRUM_CHANNEL_COUNT } from './types';
 
-export const SPECTRUM_GAME_VERSION = '1.1.0' as const;
-export const SPECTRUM_RULE_VERSION = '2.0.0' as const;
+export const SPECTRUM_GAME_VERSION = '1.2.0' as const;
+export const SPECTRUM_RULE_VERSION = '2.1.0' as const;
 
 /**
  * Authoritative rule knobs for Scent Spectrum.

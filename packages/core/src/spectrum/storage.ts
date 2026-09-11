@@ -3,6 +3,9 @@
  * Bests are keyed by scoreKey (difficulty|ruleVersion) only.
  */
 
+import { parseDifficultyId } from './presets';
+import type { DifficultyId } from './types';
+
 export const SPECTRUM_STORAGE_KEY = 'suite.spectrum.v1' as const;
 export const SPECTRUM_STORAGE_VERSION = 1 as const;
 
@@ -13,6 +16,8 @@ export type SpectrumStoredState = {
   highContrast: boolean;
   tutorialSeen: boolean;
   playedSeeds: string[];
+  /** Internal difficulty id. Older saves without this field default to junior. */
+  lastDifficulty: DifficultyId;
   /** Best totalScore by scoreKey. */
   bestByScoreKey: Record<string, number>;
 };
@@ -24,6 +29,7 @@ export const DEFAULT_SPECTRUM_STORED_STATE: SpectrumStoredState = {
   highContrast: false,
   tutorialSeen: false,
   playedSeeds: [],
+  lastDifficulty: 'junior',
   bestByScoreKey: {},
 };
 
@@ -55,6 +61,7 @@ export function migrateSpectrumStoredState(raw: unknown): SpectrumStoredState {
     highContrast: Boolean(data.highContrast),
     tutorialSeen: Boolean(data.tutorialSeen),
     playedSeeds,
+    lastDifficulty: parseDifficultyId(data.lastDifficulty),
     bestByScoreKey,
   };
 }

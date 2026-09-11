@@ -15,8 +15,8 @@ export type CanonicalMixture = {
   components: readonly MixtureComponent[];
 };
 
-/** Easy = hints + reveal mix count; hard = no signature hints, hidden mix count. */
-export type DifficultyId = 'easy' | 'hard';
+/** Easy = hints + reveal mix count; hard = no mix-count reveal. Junior = tiny 2-odor card mixer. */
+export type DifficultyId = 'junior' | 'easy' | 'hard';
 
 export type MixingModel = 'linear' | 'saturated' | 'saturatedNoisy';
 

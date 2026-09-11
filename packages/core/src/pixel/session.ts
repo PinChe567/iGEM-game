@@ -72,13 +72,15 @@ export function buildPracticeSession(args: {
   settings?: Partial<DifficultySettings>;
   seed?: string;
   contentVersion?: string;
+  presetId?: string;
 }): BuiltSession {
-  const settings = mergePracticeSettings(args.settings ?? {});
+  const presetId = args.presetId ?? 'practice';
+  const settings = mergePracticeSettings(args.settings ?? {}, presetId);
   const seed = args.seed ?? createPracticeSeed();
   const meta = buildSessionMeta({
     seed,
     mode: 'practice',
-    presetId: 'practice',
+    presetId,
     contentVersion: args.contentVersion,
   });
   return buildSession({ odors: args.odors, settings, meta });

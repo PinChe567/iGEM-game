@@ -29,6 +29,11 @@ import {
   filterCandidates,
   truthSurvivesFilter,
   getPreset,
+  parseDifficultyId,
+  hintPossibleOdorIds,
+  hintRevealComponent,
+  hintClosestCandidates,
+  hintAutofillMixture,
   toPublicPuzzle,
   assertNoTruthLeak,
   type CanonicalMixture,
@@ -50,7 +55,18 @@ describe('spectrum rules versioning', () => {
     expect(SPECTRUM_RULES.channelCount).toBe(12);
   });
 
-  it('defines easy / hard presets', () => {
+  it('defines junior / easy / hard presets', () => {
+    expect(SPECTRUM_PRESETS.junior).toMatchObject({
+      odorCount: 4,
+      componentCountMin: 2,
+      componentCountMax: 2,
+      percentStep: 25,
+      minPercent: 25,
+      maxGuesses: 6,
+      mixingModel: 'linear',
+      showSignatureHints: true,
+      revealComponentCount: true,
+    });
     expect(SPECTRUM_PRESETS.easy).toMatchObject({
       odorCount: 6,
       componentCountMin: 2,
@@ -199,7 +215,9 @@ describe('signal model', () => {
       odorIds: ALL_IDS,
       contentVersion: SPECTRUM_CONTENT_VERSION,
     });
-    expect(a.poolIds).toEqual(POOL10);
+    expect(a.poolIds).toHaveLength(10);
+    expect(new Set(a.poolIds).size).toBe(10);
+    for (const id of a.poolIds) expect(ALL_IDS).toContain(id);
     expect(mixtureKey(a.truth)).toBe(mixtureKey(b.truth));
     expect(a.observedSignal).toEqual(b.observedSignal);
   });
@@ -213,8 +231,8 @@ describe('signal fit', () => {
 });
 
 describe('generator + candidate filter', () => {
-  it('enumerates only legal ratios for easy/hard', () => {
-    for (const id of ['easy', 'hard'] as const) {
+  it('enumerates only legal ratios for junior/easy/hard', () => {
+    for (const id of ['junior', 'easy', 'hard'] as const) {
       const preset = getPreset(id);
       const legal = enumerateLegalMixtures({ odorIds: ALL_IDS, preset });
       expect(legal.length).toBeGreaterThan(0);
@@ -241,7 +259,7 @@ describe('generator + candidate filter', () => {
       contentVersion: SPECTRUM_CONTENT_VERSION,
     });
     const legal = enumerateLegalMixtures({
-      odorIds: ALL_IDS,
+      odorIds: puzzle.poolIds,
       preset: getPreset('easy'),
     });
     const history: FeedbackEntry[] = [];
@@ -325,6 +343,118 @@ describe('property: legal mixtures never NaN / bad sums', () => {
   it('content pool sizes match presets', () => {
     expect(spectrumPool(10)).toHaveLength(10);
     expect(SPECTRUM_ODORS).toHaveLength(16);
+  });
+});
+
+describe('spectrum junior preset + hints', () => {
+  it('enumerates ~18 two-component 25% mixtures and is deterministic', () => {
+    const preset = getPreset('junior');
+    const legal = enumerateLegalMixtures({ odorIds: ALL_IDS, preset });
+    expect(legal.length).toBe(18);
+    expect(legal.every((m) => m.components.length === 2)).toBe(true);
+    expect(legal.every((m) => m.components.every((c) => c.percent % 25 === 0 && c.percent >= 25))).toBe(
+      true,
+    );
+    const again = enumerateLegalMixtures({ odorIds: ALL_IDS, preset });
+    expect(again.map(mixtureKey)).toEqual(legal.map(mixtureKey));
+
+    const a = buildPuzzle({
+      seed: 'junior-det-seed',
+      difficulty: 'junior',
+      signatures: SIGS,
+      odorIds: ALL_IDS,
+      contentVersion: SPECTRUM_CONTENT_VERSION,
+    });
+    const b = buildPuzzle({
+      seed: 'junior-det-seed',
+      difficulty: 'junior',
+      signatures: SIGS,
+      odorIds: ALL_IDS,
+      contentVersion: SPECTRUM_CONTENT_VERSION,
+    });
+    expect(a.poolIds).toEqual(b.poolIds);
+    expect(mixtureKey(a.truth)).toBe(mixtureKey(b.truth));
+    expect(a.observedSignal).toEqual(b.observedSignal);
+    const other = buildPuzzle({
+      seed: 'junior-other-seed',
+      difficulty: 'junior',
+      signatures: SIGS,
+      odorIds: ALL_IDS,
+      contentVersion: SPECTRUM_CONTENT_VERSION,
+    });
+    expect(other.poolIds).toHaveLength(4);
+    expect(a.poolIds.join(',')).not.toBe(other.poolIds.join(','));
+  });
+
+  it('hints never reveal invalid candidates and autofill is a legal 100% mix', () => {
+    const seed = 'junior-hint-seed';
+    const puzzle = buildPuzzle({
+      seed,
+      difficulty: 'junior',
+      signatures: SIGS,
+      odorIds: ALL_IDS,
+      contentVersion: SPECTRUM_CONTENT_VERSION,
+    });
+    const legal = enumerateLegalMixtures({ odorIds: puzzle.poolIds, preset: getPreset('junior') });
+    const history: FeedbackEntry[] = [
+      {
+        guess: mix([
+          [puzzle.poolIds[0]!, 50],
+          [puzzle.poolIds[1]!, 50],
+        ]),
+        ab: scoreAB(
+          mix([
+            [puzzle.poolIds[0]!, 50],
+            [puzzle.poolIds[1]!, 50],
+          ]),
+          puzzle.truth,
+          puzzle.poolIds,
+        ),
+      },
+    ];
+    const surviving = filterCandidates(legal, { history, poolIds: puzzle.poolIds });
+    expect(surviving.some((m) => mixturesEqual(m, puzzle.truth))).toBe(true);
+
+    const possible = hintPossibleOdorIds(surviving);
+    const survivingOdors = new Set(surviving.flatMap((m) => m.components.map((c) => c.odorId)));
+    expect(possible.every((id) => survivingOdors.has(id))).toBe(true);
+
+    const reveal = hintRevealComponent(surviving);
+    expect(reveal).not.toBeNull();
+    expect(survivingOdors.has(reveal!.odorId)).toBe(true);
+
+    const closest = hintClosestCandidates({
+      surviving,
+      observedSignal: puzzle.observedSignal,
+      signatures: SIGS,
+      difficulty: 'junior',
+      seed,
+    });
+    expect(closest.length).toBeGreaterThan(0);
+    expect(closest.length).toBeLessThanOrEqual(3);
+    const survivingKeys = new Set(surviving.map(mixtureKey));
+    for (const mix of closest) {
+      expect(survivingKeys.has(mixtureKey(mix))).toBe(true);
+      const filled = hintAutofillMixture(mix, 'junior');
+      expect(filled).not.toBeNull();
+      expect(filled!.components.reduce((s, c) => s + c.percent, 0)).toBe(100);
+      const v = validateMixture(filled!.components, {
+        minPercent: 25,
+        percentStep: 25,
+        componentCountMin: 2,
+        componentCountMax: 2,
+      });
+      expect(v.ok).toBe(true);
+    }
+  });
+
+  it('parses older easy/hard difficulty ids', () => {
+    expect(parseDifficultyId('easy')).toBe('easy');
+    expect(parseDifficultyId('hard')).toBe('hard');
+    expect(parseDifficultyId('standard')).toBe('easy');
+    expect(parseDifficultyId('challenge')).toBe('hard');
+    expect(parseDifficultyId('nope')).toBe('junior');
+    expect(parseDifficultyId(undefined)).toBe('junior');
   });
 });
 

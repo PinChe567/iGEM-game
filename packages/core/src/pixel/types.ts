@@ -18,7 +18,11 @@ export type DifficultySettings = {
   noisePercentOfOff: NoisePercentOfOff;
   /** Whether the player may revisit study cards before confirming the quiz. */
   allowStudyReview: boolean;
-  /** How long the pattern is shown before options unlock (ms). 0 = immediate. */
+  /**
+   * How long the pattern stays visible (ms) before it is hidden for timed-memory play.
+   * 0 = the pattern stays visible and options unlock immediately.
+   * Junior never uses timed memory.
+   */
   patternDisplayMs: number;
   poolSize: number;
   questionCount: number;
@@ -28,6 +32,9 @@ export type DifficultySettings = {
 };
 
 export type SessionMode = 'practice' | 'daily';
+
+/** Player-facing level cards. `practice` is Standard (legacy preset id). */
+export type PixelLevelId = 'junior' | 'practice' | 'challenge';
 
 export type SessionMeta = {
   seed: string;

@@ -24,7 +24,7 @@ export {
   getSpectrumVersions,
 } from './rules';
 
-export { SPECTRUM_PRESETS, getPreset } from './presets';
+export { SPECTRUM_PRESETS, SPECTRUM_DIFFICULTY_IDS, getPreset, isDifficultyId, parseDifficultyId } from './presets';
 
 export {
   canonicalizeMixture,
@@ -57,6 +57,7 @@ export {
   enumerateLegalMixtures,
   pickTruthBySeed,
   buildPuzzle,
+  selectSpectrumPool,
   type EnumerateOptions,
   type BuildPuzzleInput,
 } from './generator';
@@ -83,8 +84,16 @@ export {
 export {
   computeSpectrumScore,
   formatElapsed,
+  HINT_SCORE_PENALTY,
   type SpectrumScoreBreakdown,
 } from './scoring';
+
+export {
+  hintPossibleOdorIds,
+  hintRevealComponent,
+  hintClosestCandidates,
+  hintAutofillMixture,
+} from './hints';
 
 export {
   toPublicPuzzle,

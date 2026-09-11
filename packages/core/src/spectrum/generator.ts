@@ -1,4 +1,4 @@
-import { createRng } from '../rng';
+import { createRng, shuffle } from '../rng';
 import { SPECTRUM_RULES } from './rules';
 import { getPreset } from './presets';
 import {
@@ -76,6 +76,18 @@ export function enumerateLegalMixtures(options: EnumerateOptions): CanonicalMixt
   return out;
 }
 
+export function selectSpectrumPool(
+  odorIds: readonly string[],
+  count: number,
+  seed: string,
+  ruleVersion: string = SPECTRUM_RULES.ruleVersion,
+): string[] {
+  if (count < 1 || odorIds.length < count) {
+    throw new Error(`Need at least ${count} odors to build a pool of ${count}, got ${odorIds.length}`);
+  }
+  return shuffle(odorIds, `spectrum-pool:${ruleVersion}:${seed}`).slice(0, count);
+}
+
 export function pickTruthBySeed(
   legal: readonly CanonicalMixture[],
   seed: string,
@@ -90,9 +102,9 @@ export function pickTruthBySeed(
 export type BuildPuzzleInput = {
   seed: string;
   difficulty: DifficultyId;
-  /** Full catalog signatures (map). Pool is sliced by preset.odorCount via odorIds. */
+  /** Full catalog signatures. */
   signatures: SignatureLookup;
-  /** Ordered odor ids; first preset.odorCount form the pool. */
+  /** Ordered catalog ids; a seed-shuffled slice of preset.odorCount becomes the pool. */
   odorIds: readonly string[];
   contentVersion: string;
   rules?: SpectrumRuleSet;
@@ -101,9 +113,9 @@ export type BuildPuzzleInput = {
 export function buildPuzzle(input: BuildPuzzleInput): SpectrumPuzzle {
   const rules = input.rules ?? SPECTRUM_RULES;
   const preset = getPreset(input.difficulty);
-  const poolIds = input.odorIds.slice(0, preset.odorCount);
+  const poolIds = selectSpectrumPool(input.odorIds, preset.odorCount, input.seed, rules.ruleVersion);
   const legal = enumerateLegalMixtures({
-    odorIds: input.odorIds,
+    odorIds: poolIds,
     preset,
   });
   const truth = pickTruthBySeed(legal, input.seed, rules.ruleVersion);

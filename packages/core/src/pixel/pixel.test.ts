@@ -13,10 +13,19 @@ import {
   summarizeResult,
   mergePracticeSettings,
   listNoisePercents,
+  listPixelPresetIds,
   parsePixelStoredJson,
   migratePixelStoredState,
   PIXEL_GAME_VERSION,
   PIXEL_SEED_VERSION,
+  PIXEL_PRESETS,
+  DEFAULT_PRACTICE_SETTINGS,
+  JUNIOR_SETTINGS,
+  CHALLENGE_SETTINGS,
+  getPreset,
+  effectivePatternDisplayMs,
+  usesTimedMemory,
+  dailyPresetIdForLevel,
   toPublicQuestion,
   toPublicSession,
   assertNoAnswerLeak,
@@ -116,9 +125,9 @@ describe('pixel session seeds', () => {
     expect(same).toBe(false);
 
     for (const session of [a, b]) {
-      expect(session.poolIds).toHaveLength(6);
-      expect(new Set(session.poolIds).size).toBe(6);
-      expect(session.questions).toHaveLength(10);
+      expect(session.poolIds).toHaveLength(8);
+      expect(new Set(session.poolIds).size).toBe(8);
+      expect(session.questions).toHaveLength(16);
       for (const q of session.questions) {
         expect(q.optionIds).toHaveLength(4);
         expect(new Set(q.optionIds).size).toBe(4);
@@ -128,7 +137,7 @@ describe('pixel session seeds', () => {
         expect(onCount).toBeGreaterThan(0);
       }
       const answerCounts = session.questions.map((q) => q.answerId);
-      // 6 unique + 4 repeats ⇒ at most 6 unique ids, all from pool
+      // 8 unique + 8 repeats ⇒ at most 8 unique ids, all from pool
       for (const id of answerCounts) expect(session.poolIds).toContain(id);
     }
   });
@@ -160,7 +169,7 @@ describe('pixel scoring', () => {
     ).toBe(200);
 
     expect(clampScore(Number.NaN, settings)).toBe(0);
-    expect(clampScore(99999, settings)).toBe(1000);
+    expect(clampScore(99999, settings)).toBe(1600);
     expect(clampScore(-50, settings)).toBe(0);
   });
 
@@ -176,10 +185,10 @@ describe('pixel scoring', () => {
     expect(hit.correct).toBe(true);
     expect(hit.nextScore).toBe(100);
 
-    const summary = summarizeResult(600, settings);
+    const summary = summarizeResult(1000, settings);
     expect(summary.passed).toBe(true);
     expect(summary.perfect).toBe(false);
-    expect(summarizeResult(1000, settings).perfect).toBe(true);
+    expect(summarizeResult(1600, settings).perfect).toBe(true);
   });
 });
 
@@ -199,6 +208,98 @@ describe('pixel localStorage migration', () => {
         bestByPreset: { practice: 400 },
       }).bestByPreset.practice,
     ).toBe(400);
+    expect(parsePixelStoredJson(null).onboardingSeen).toBe(false);
+    expect(migratePixelStoredState({ onboardingSeen: true, locale: 'en' }).onboardingSeen).toBe(true);
+  });
+});
+
+describe('pixel level presets', () => {
+  it('keeps Standard practice settings unchanged', () => {
+    expect(DEFAULT_PRACTICE_SETTINGS).toEqual({
+      matrixSize: 4,
+      distractorBias: 'similar',
+      noisePercentOfOff: 10,
+      allowStudyReview: true,
+      patternDisplayMs: 0,
+      poolSize: 8,
+      questionCount: 16,
+      optionsPerQuestion: 4,
+      passCorrect: 10,
+      pointsPerCorrect: 100,
+    });
+    expect(getPreset('practice')).toEqual(DEFAULT_PRACTICE_SETTINGS);
+  });
+
+  it('adds a child-friendly Junior preset', () => {
+    expect(JUNIOR_SETTINGS).toMatchObject({
+      matrixSize: 3,
+      poolSize: 5,
+      questionCount: 10,
+      optionsPerQuestion: 3,
+      distractorBias: 'mixed',
+      allowStudyReview: true,
+      patternDisplayMs: 0,
+      passCorrect: 6,
+    });
+    expect([0, 10]).toContain(JUNIOR_SETTINGS.noisePercentOfOff);
+    expect(getPreset('junior')).toEqual(JUNIOR_SETTINGS);
+  });
+
+  it('keeps Challenge and existing daily presets', () => {
+    expect(CHALLENGE_SETTINGS.patternDisplayMs).toBeGreaterThan(0);
+    expect(getPreset('challenge')).toEqual(CHALLENGE_SETTINGS);
+    expect(listPixelPresetIds()).toEqual(
+      expect.arrayContaining(['junior', 'practice', 'challenge', 'daily-easy', 'daily-standard', 'daily-focus', 'daily-dense']),
+    );
+    expect(PIXEL_PRESETS['daily-focus']?.allowStudyReview).toBe(false);
+    expect(PIXEL_PRESETS['daily-dense']?.matrixSize).toBe(6);
+    expect(dailyPresetIdForLevel('practice')).toBe('daily-standard');
+    expect(dailyPresetIdForLevel('junior')).toBe('junior');
+    expect(dailyPresetIdForLevel('challenge')).toBe('daily-focus');
+  });
+
+  it('builds a deterministic Junior session with 6/10 pass mark', () => {
+    const a = buildPracticeSession({
+      odors: catalog(),
+      seed: 'junior-seed-alpha',
+      presetId: 'junior',
+      contentVersion: '1.0.0',
+    });
+    const b = buildPracticeSession({
+      odors: catalog(),
+      seed: 'junior-seed-alpha',
+      presetId: 'junior',
+      contentVersion: '1.0.0',
+    });
+    expect(a.poolIds).toEqual(b.poolIds);
+    expect(a.questions).toEqual(b.questions);
+    expect(a.poolIds).toHaveLength(5);
+    expect(a.questions).toHaveLength(10);
+    expect(a.meta.presetId).toBe('junior');
+    expect(a.settings.patternDisplayMs).toBe(0);
+    for (const q of a.questions) {
+      expect(q.optionIds).toHaveLength(3);
+      expect(q.optionIds).toContain(q.answerId);
+    }
+    expect(summarizeResult(600, a.settings).passed).toBe(true);
+    expect(summarizeResult(500, a.settings).passed).toBe(false);
+  });
+});
+
+describe('pixel timed memory', () => {
+  it('never applies timed memory to Junior', () => {
+    expect(effectivePatternDisplayMs(JUNIOR_SETTINGS, 'junior')).toBe(0);
+    expect(effectivePatternDisplayMs({ ...JUNIOR_SETTINGS, patternDisplayMs: 1200 }, 'junior')).toBe(0);
+    expect(usesTimedMemory({ ...JUNIOR_SETTINGS, patternDisplayMs: 800 }, 'junior')).toBe(false);
+    expect(mergePracticeSettings({ patternDisplayMs: 800 }, 'junior').patternDisplayMs).toBe(0);
+  });
+
+  it('uses patternDisplayMs as visible duration for Challenge', () => {
+    expect(effectivePatternDisplayMs(CHALLENGE_SETTINGS, 'challenge')).toBe(800);
+    expect(usesTimedMemory(CHALLENGE_SETTINGS, 'challenge')).toBe(true);
+    expect(effectivePatternDisplayMs(DEFAULT_PRACTICE_SETTINGS, 'practice')).toBe(0);
+    expect(usesTimedMemory(getPreset('daily-focus'), 'daily-focus')).toBe(true);
+    expect(effectivePatternDisplayMs(getPreset('daily-focus'))).toBe(1200);
   });
 });
 

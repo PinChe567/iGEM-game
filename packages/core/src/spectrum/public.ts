@@ -37,7 +37,7 @@ export type PublicSpectrumPuzzle = {
   ratioRules: PublicSpectrumRatioRules;
   mixingModel: DifficultyPreset['mixingModel'];
   showSignatureHints: boolean;
-  /** Easy only: number of positive components in the hidden truth. */
+  /** When revealComponentCount is true (Junior / Standard): number of positive components. */
   truthComponentCount: number | null;
   legalMixtureCount: number;
 };

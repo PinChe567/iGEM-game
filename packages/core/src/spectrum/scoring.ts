@@ -3,6 +3,9 @@ import { SPECTRUM_RULE_VERSION } from './rules';
 import { getPreset } from './presets';
 import { spectrumScoreKey } from './session';
 
+/** Per staged hint on Junior / Standard. Challenge is unpenalized. Never zeroes a solved run by itself. */
+export const HINT_SCORE_PENALTY = 400;
+
 export type SpectrumScoreBreakdown = {
   solved: boolean;
   guessesUsed: number;
@@ -14,7 +17,7 @@ export type SpectrumScoreBreakdown = {
   scoreKey: string;
   /** Points from remaining guesses (0 if unsolved). */
   guessScore: number;
-  /** Points from elapsed time (0 if unsolved). */
+  /** Points from elapsed time (0 if unsolved or Junior). */
   timeScore: number;
   totalScore: number;
 };
@@ -29,6 +32,8 @@ export function computeSpectrumScore(args: {
   difficulty: DifficultyId;
   elapsedMs: number;
   ruleVersion?: string;
+  /** Staged hints used (0–3). Junior/Standard subtract a small penalty; never blocks a solve. */
+  hintsUsed?: number;
 }): SpectrumScoreBreakdown {
   const ruleVersion = args.ruleVersion ?? SPECTRUM_RULE_VERSION;
   const preset = getPreset(args.difficulty);
@@ -36,6 +41,7 @@ export function computeSpectrumScore(args: {
   const guessesUsed = Math.max(0, Math.min(maxGuesses, Math.round(args.guessesUsed)));
   const elapsedMs = Math.max(0, Math.round(args.elapsedMs));
   const scoreKey = spectrumScoreKey(args.difficulty, ruleVersion);
+  const hintsUsed = Math.max(0, Math.min(3, Math.round(args.hintsUsed ?? 0)));
 
   if (!args.solved) {
     return {
@@ -54,12 +60,15 @@ export function computeSpectrumScore(args: {
 
   const unused = Math.max(0, maxGuesses - guessesUsed);
   const guessScore = 5_000 + unused * 1_000;
-  // Full time bonus under 30s; linear decay to 0 by 3 minutes.
+  // Full time bonus under 30s; linear decay to 0 by 3 minutes. Junior does not use time score.
   const elapsedSec = elapsedMs / 1000;
-  const timeScore = Math.max(
-    0,
-    Math.round(2_000 * Math.max(0, 1 - Math.max(0, elapsedSec - 30) / 150)),
-  );
+  const timeScore =
+    args.difficulty === 'junior'
+      ? 0
+      : Math.max(0, Math.round(2_000 * Math.max(0, 1 - Math.max(0, elapsedSec - 30) / 150)));
+
+  const hintPenalty = args.difficulty === 'hard' ? 0 : HINT_SCORE_PENALTY * hintsUsed;
+  const totalScore = Math.max(0, guessScore + timeScore - hintPenalty);
 
   return {
     solved: true,
@@ -71,7 +80,7 @@ export function computeSpectrumScore(args: {
     scoreKey,
     guessScore,
     timeScore,
-    totalScore: guessScore + timeScore,
+    totalScore,
   };
 }
 
