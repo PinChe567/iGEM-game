@@ -56,8 +56,21 @@ describe('wiki content catalogs stay empty until team fills them', () => {
     expect(humanPracticesCatalog.decisionTimeline).toEqual([]);
   });
 
-  it('education catalog starts empty; completed requires results', () => {
-    expect(educationCatalog.activities).toEqual([]);
+  it('education catalog lists in-progress game activities with empty results', () => {
+    expect(educationCatalog.activities.map((a) => a.id)).toEqual([
+      'suite-three-games',
+      'game-1-pixel',
+      'game-2-qc-shift',
+      'game-3-scent-mixer',
+    ]);
+    for (const activity of educationCatalog.activities) {
+      assertEducationActivity(activity);
+      expect(activity.status).toBe('in-progress');
+      expect(activity.results.en).toBe('');
+      expect(activity.results['zh-Hant']).toBe('');
+      expect(activity.evaluationMethod).toBe('pre-post');
+      expect(activity.whatChangedAfterFeedback.en).toBe('');
+    }
     expect(() =>
       assertEducationActivity({
         id: 'x',

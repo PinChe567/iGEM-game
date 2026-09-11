@@ -1,5 +1,6 @@
-.sp-intro-banner {
-  margin-bottom: 1.25rem;
+.result-copy .sp-pattern-stack {
+  text-align: left;
+  margin-top: 0.75rem;
 }
 
 .sp-intro-banner h1 em {
@@ -113,10 +114,167 @@
 
 .sp-canvas {
   width: 100%;
-  height: 240px;
+  height: 168px;
   display: block;
   border-radius: 8px;
   background: color-mix(in srgb, CanvasText 6%, transparent);
+}
+
+.sp-pattern-stack {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.sp-predict {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem 1rem;
+  align-items: start;
+}
+
+.sp-predict-odors,
+.sp-predict-compare {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.sp-predict .sp-pattern-row {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 860px) {
+  .sp-predict {
+    grid-template-columns: 1fr;
+  }
+
+  .sp-predict-compare {
+    order: -1;
+  }
+}
+
+.sp-pattern-options {
+  display: contents;
+}
+
+.sp-pattern-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  gap: 0.65rem 0.8rem;
+  align-items: center;
+  padding: 0.45rem 0.4rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, CanvasText 12%, transparent);
+}
+
+.sp-pattern-row.is-question {
+  background: color-mix(in srgb, CanvasText 4%, transparent);
+}
+
+.sp-pattern-row.is-result {
+  background: color-mix(in srgb, var(--lime, #b7e39a) 8%, transparent);
+}
+
+.sp-pattern-row.is-picked,
+.sp-pattern-row.is-option.is-picked {
+  border-color: var(--lime, #cde76d);
+  background: color-mix(in srgb, var(--lime, #cde76d) 18%, var(--card, #fffefa));
+  opacity: 1;
+}
+
+.sp-pattern-row.is-hint-possible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lime, #b7e39a) 45%, transparent);
+}
+
+.sp-pattern-row.is-hint-out:not(.is-picked) {
+  opacity: 0.42;
+}
+
+.sp-pattern-meta {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+  align-content: start;
+}
+
+.sp-predict .sp-pattern-meta {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+}
+
+.sp-predict .sp-odor-name {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.sp-predict .sp-pattern-kicker,
+.sp-predict .sp-odor-name span:first-child,
+.sp-predict .sp-pct-label {
+  white-space: nowrap;
+}
+
+.sp-predict .sp-pattern-meta .sp-stepper {
+  flex: 1 1 7rem;
+  width: auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.sp-pattern-meta .sp-stepper input[type='range'] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sp-pattern-meta .sp-stepper input[type='number'] {
+  width: 3.4rem;
+}
+
+.sp-pattern-kicker {
+  font: 600 10px/1.2 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.sp-pattern-chart {
+  min-width: 0;
+}
+
+.sp-pattern-pick {
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 4.25rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 10px;
+  border: 2px solid color-mix(in srgb, CanvasText 18%, transparent);
+  background: color-mix(in srgb, Canvas 94%, CanvasText 6%);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sp-pattern-row.is-picked .sp-pattern-pick {
+  border-color: var(--lime, #b7e39a);
+}
+
+.sp-pattern-pick .sp-odor-order {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.4rem;
+}
+
+@media (max-width: 720px) {
+  .sp-pattern-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .sp-canvas-sm {
@@ -129,6 +287,21 @@
   gap: 0.75rem 1.25rem;
   margin-bottom: 0.75rem;
   font-size: 0.9rem;
+  align-items: center;
+}
+
+.sp-more {
+  margin-top: 1rem;
+}
+
+.sp-more summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--purple-dark, #5032bb);
+}
+
+.sp-status .text-button {
+  margin-left: auto;
 }
 
 .sp-builder {
@@ -187,6 +360,7 @@
 .sp-stepper {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.35rem;
 }
 
@@ -304,6 +478,300 @@
 
 .sp-guide-list {
   padding-left: 1.1rem;
+}
+
+.sp-child-fb {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.sp-last-guess {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.sp-last-guess.is-entering {
+  animation: sp-guess-in 0.55s ease both;
+}
+
+.sp-last-guess-head {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.45rem 0.4rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--lime, #cde76d) 35%, CanvasText 12%);
+  background: color-mix(in srgb, var(--lime, #cde76d) 10%, Canvas);
+}
+
+.sp-last-mix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+}
+
+.sp-mix-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, CanvasText 6%, Canvas);
+}
+
+.sp-mix-plus {
+  font-weight: 800;
+  opacity: 0.55;
+}
+
+.sp-odor-icon {
+  display: inline-block;
+  width: 28px;
+  height: 22px;
+  border-radius: 8px;
+  background-image: url("../../pixel/assets/odor-atlas.png");
+  background-size: 500% 400%;
+  flex: 0 0 auto;
+}
+
+.sp-guess-compare {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.sp-history-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.5rem;
+  margin: 0.35rem 0 0.85rem;
+}
+
+.sp-history-card {
+  display: grid;
+  gap: 0.25rem;
+  text-align: left;
+  padding: 0.5rem 0.55rem 0.45rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, CanvasText 14%, transparent);
+  background: color-mix(in srgb, Canvas 94%, CanvasText 6%);
+  color: inherit;
+  cursor: pointer;
+}
+
+.sp-history-card.is-active {
+  border-color: var(--lime, #cde76d);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lime, #cde76d) 40%, transparent);
+}
+
+.sp-history-mix {
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.sp-mini-canvas {
+  width: 100%;
+  height: 44px;
+  display: block;
+}
+
+.sp-odor-card.is-submit-flash,
+.sp-pattern-row.is-submit-flash {
+  animation: sp-submit-flash 0.55s ease;
+}
+
+@keyframes sp-guess-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sp-submit-flash {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--lime, #cde76d) 0%, transparent);
+  }
+  35% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--lime, #cde76d) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--lime, #cde76d) 0%, transparent);
+  }
+}
+
+html.reduced-motion .sp-last-guess.is-entering,
+html.reduced-motion .sp-odor-card.is-submit-flash,
+html.reduced-motion .sp-pattern-row.is-submit-flash {
+  animation: none;
+}
+
+.sp-tech-details {
+  margin-top: 0.35rem;
+}
+
+.sp-tech-details summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.sp-hints {
+  margin: 0.75rem 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sp-hint-banner {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--lime, #b7e39a) 16%, transparent);
+}
+
+.sp-hint-mix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.5rem;
+}
+
+.sp-hint-mix {
+  min-height: 3rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, CanvasText 22%, transparent);
+  background: color-mix(in srgb, Canvas 92%, CanvasText 8%);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sp-junior-builder .sp-sum {
+  display: none;
+}
+
+.sp-odor-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.sp-odor-card {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  min-height: 5.5rem;
+  padding: 0.7rem;
+  border-radius: 12px;
+  border: 2px solid color-mix(in srgb, CanvasText 18%, transparent);
+  background: color-mix(in srgb, Canvas 94%, CanvasText 6%);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sp-odor-card.is-picked {
+  border-color: var(--lime, #cde76d);
+  background: color-mix(in srgb, var(--lime, #cde76d) 20%, var(--card, #fffefa));
+  opacity: 1;
+}
+
+.sp-odor-card.is-hint-possible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lime, #b7e39a) 55%, transparent);
+}
+
+.sp-odor-card.is-hint-out:not(.is-picked) {
+  opacity: 0.42;
+}
+
+.sp-odor-card-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.sp-odor-order {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.45rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--lime, #b7e39a);
+  color: #111;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.sp-ratio-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.sp-ratio-btn {
+  min-height: 3.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: 12px;
+  border: 2px solid color-mix(in srgb, CanvasText 20%, transparent);
+  background: color-mix(in srgb, Canvas 92%, CanvasText 8%);
+  color: inherit;
+  cursor: pointer;
+}
+
+.sp-ratio-btn.is-on {
+  border-color: var(--lime, #cde76d);
+  background: color-mix(in srgb, var(--lime, #cde76d) 20%, var(--card, #fffefa));
+  opacity: 1;
+}
+
+.sp-mix-preview {
+  font-weight: 600;
+}
+
+.sp-discovered {
+  margin: 1rem 0;
+  padding: 0.85rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, CanvasText 16%, transparent);
+  background: color-mix(in srgb, CanvasText 5%, transparent);
+}
+
+.sp-discovered h4 {
+  margin: 0 0 0.4rem;
+}
+
+@media (max-width: 720px) {
+  .sp-odor-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sp-ratio-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+html.high-contrast .sp-odor-card,
+html.high-contrast .sp-ratio-btn,
+html.high-contrast .sp-hint-mix,
+html.high-contrast .sp-discovered,
+html.high-contrast .sp-pattern-row,
+html.high-contrast .sp-pattern-pick {
+  border-color: #000;
+  background: #fff;
+  color: #000;
+}
+
+html.high-contrast .sp-odor-card.is-picked,
+html.high-contrast .sp-ratio-btn.is-on,
+html.high-contrast .sp-pattern-row.is-picked {
+  background: #eef6c4;
+  color: #000;
 }
 
 .sr-only {

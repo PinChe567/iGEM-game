@@ -34,6 +34,14 @@ function paint(): void {
       ? `<div class="wiki-empty" data-testid="education-empty"><p><strong>${escapeHtml(p.empty)}</strong></p></div>`
       : '';
 
+  const educatorLinks = [
+    { href: '../education-games/README.md', label: p.reusablePack },
+    { href: '../education-games/education-study-protocol.md', label: p.studyMode },
+    { href: '../education-games/question-bank.md', label: p.questionBank },
+    { href: '../education-games/playtest-protocol.md', label: p.playtestProtocol },
+    { href: '../education-games/data-dictionary.md', label: p.dataDictionary },
+  ];
+
   const activities = cat.activities
     .map((a) => {
       const title = escapeHtml(loc(a.title, locale) || a.id);
@@ -51,7 +59,7 @@ function paint(): void {
               .map((d) => {
                 const label = escapeHtml(loc(d.label, locale));
                 const license = escapeHtml(loc(d.license, locale));
-                return `<li><a href="${escapeHtml(d.href)}" rel="noopener noreferrer">${label}</a> (${license})</li>`;
+                return `<li><a href="${escapeHtml(d.href)}" rel="noopener">${label}</a> (${license})</li>`;
               })
               .join('')}</ul></dd></div>`;
 
@@ -84,9 +92,22 @@ function paint(): void {
       <h1>${escapeHtml(p.title)}</h1>
       <p>${escapeHtml(p.lead)}</p>
       ${intro ? `<p>${escapeHtml(intro)}</p>` : ''}
+      <p class="edu-model-note">${escapeHtml(p.modelDisclaimer)}</p>
+    </section>
+    <section class="wiki-section" id="for-educators" data-testid="for-educators">
+      <h2>${escapeHtml(p.forEducators)}</h2>
+      <p>${escapeHtml(p.forEducatorsLead)}</p>
+      <ul class="edu-resource-list">
+        ${educatorLinks
+          .map(
+            (item) =>
+              `<li><a href="${escapeHtml(item.href)}" rel="noopener">${escapeHtml(item.label)}</a></li>`,
+          )
+          .join('')}
+      </ul>
     </section>
     ${empty}
-    <div class="wiki-card-list">${activities}</div>
+    <div class="wiki-card-list" data-testid="education-activity-list">${activities}</div>
   `;
 }
 

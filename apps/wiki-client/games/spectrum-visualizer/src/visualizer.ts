@@ -16,6 +16,7 @@ import {
   mixturesEqual,
   scoreAB,
   signalFitScore,
+  parseDifficultyId,
   type CanonicalMixture,
   type DifficultyId,
   type FeedbackEntry,
@@ -51,6 +52,9 @@ const copy = {
     history: '回饋歷程',
     easy: '簡單',
     hard: '困難',
+    junior: '兒童',
+    standard: '標準',
+    challenge: '挑戰',
   },
   en: {
     title: 'Scent Spectrum · Signal visualizer (dev)',
@@ -77,6 +81,9 @@ const copy = {
     history: 'Feedback history',
     easy: 'Easy',
     hard: 'Hard',
+    junior: 'Junior',
+    standard: 'Standard',
+    challenge: 'Challenge',
   },
 } as const;
 
@@ -209,8 +216,9 @@ export function paintVisualizer(root: HTMLElement, locale: Locale): void {
       </label>
       <label>${t.difficulty}
         <select data-difficulty>
-          <option value="easy" selected>${t.easy}</option>
-          <option value="hard">${t.hard}</option>
+          <option value="junior">${t.junior}</option>
+          <option value="easy" selected>${t.standard}</option>
+          <option value="hard">${t.challenge}</option>
         </select>
       </label>
       <label class="sv-truth-label">${t.truthPick}
@@ -272,7 +280,7 @@ export function paintVisualizer(root: HTMLElement, locale: Locale): void {
     model: string;
   } {
     state.seed = seedInput.value.trim() || 'dev-spectrum-1';
-    state.difficulty = diffSelect.value as DifficultyId;
+    state.difficulty = parseDifficultyId(diffSelect.value);
     const preset = getPreset(state.difficulty);
     const legal = enumerateLegalMixtures({ odorIds: ALL_IDS, preset });
     const seeded = buildPuzzle({

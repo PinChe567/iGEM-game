@@ -1,9 +1,14 @@
 import type { Locale } from '../i18n/locale';
 import type { MessageTree } from '../i18n/messages';
 
-/** Wiki page nav — unused for the game hub (kept for optional about pages). */
-export function wikiNavMarkup(_copy: MessageTree, _depth: 0 | 1): string {
-  return '';
+/** Wiki page nav for Education / About-style pages (not the game hub). */
+export function wikiNavMarkup(copy: MessageTree, depth: 0 | 1): string {
+  const prefix = depth === 0 ? './' : '../';
+  return `<nav class="wiki-page-nav" aria-label="${escapeHtml(copy.pages.navEducation)}">
+    <a href="${prefix}index.html">${escapeHtml(copy.shell.homeAria)}</a>
+    <a href="${prefix}education/index.html">${escapeHtml(copy.pages.navEducation)}</a>
+    <a href="${prefix}about/index.html">${escapeHtml(copy.legal.tabScience)}</a>
+  </nav>`;
 }
 
 /** Social outbound links — removed from the game UI. */

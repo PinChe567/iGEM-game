@@ -3,6 +3,8 @@
  * Never present as a global ranking.
  */
 
+import { QC_SHIFT_STORAGE_KEY, parseQcShiftStoredJson } from '@suite/core/qc-shift';
+
 export const SUITE_EXPLORER_KEY = 'suite.explorer.v1' as const;
 export const SUITE_EXPLORER_VERSION = 1 as const;
 
@@ -96,6 +98,7 @@ export function readExplorerSnapshot(args: {
   spectrumKey: string;
   parsePixel: (t: string | null) => {
     playedSeeds: string[];
+    onboardingSeen?: boolean;
   };
   parseLabyrinth: (t: string | null) => {
     tutorialCompleted: boolean;
@@ -114,6 +117,7 @@ export function readExplorerSnapshot(args: {
     { tutorialCompleted: false, bestTotal: 0, lastSeed: '' },
     args.parseLabyrinth,
   );
+  const qcShift = safeParse(QC_SHIFT_STORAGE_KEY, parseQcShiftStoredJson(null), parseQcShiftStoredJson);
   const spectrum = safeParse(
     args.spectrumKey,
     { tutorialSeen: false, playedSeeds: [] as string[] },
@@ -124,17 +128,19 @@ export function readExplorerSnapshot(args: {
   const pixelDaily = pixel.playedSeeds.some((s) => s.startsWith('d-'));
   const spectrumPractice = spectrum.playedSeeds.some((s) => s.startsWith('sp-'));
   const spectrumDaily = spectrum.playedSeeds.some((s) => s.startsWith('sd-'));
+  const qcPlayed = qcShift.playedSeeds.length > 0;
+  const qcDaily = qcShift.playedSeeds.some((s) => s.startsWith('qcd-'));
 
   const pixelProg: GameLocalProgress = {
-    tutorialDone: pixel.playedSeeds.length > 0,
+    tutorialDone: Boolean(pixel.onboardingSeen) || pixel.playedSeeds.length > 0,
     practiceDone: pixelPractice && pixel.playedSeeds.length > 0,
     dailyOrCampaignDone: pixelDaily,
     scienceDone: explorer.scienceCards.pixel || explorer.scienceCards.suite,
   };
   const labyrinthProg: GameLocalProgress = {
-    tutorialDone: labyrinth.tutorialCompleted,
-    practiceDone: Boolean(labyrinth.lastSeed) || labyrinth.bestTotal > 0,
-    dailyOrCampaignDone: labyrinth.bestTotal > 0,
+    tutorialDone: qcShift.tutorialSeen || labyrinth.tutorialCompleted || qcPlayed,
+    practiceDone: qcPlayed || Boolean(labyrinth.lastSeed) || labyrinth.bestTotal > 0,
+    dailyOrCampaignDone: qcDaily || labyrinth.bestTotal > 0,
     scienceDone: explorer.scienceCards.labyrinth || explorer.scienceCards.suite,
   };
   const spectrumProg: GameLocalProgress = {

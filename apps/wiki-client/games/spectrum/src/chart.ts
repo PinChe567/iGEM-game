@@ -6,6 +6,33 @@ export type ChartSeries = {
   fill?: string;
 };
 
+export const CHANNEL_COUNT = 12;
+/** Shared plot inset so question / option / result peaks share the same x slots. */
+export const CHART_PAD = { l: 40, r: 10, t: 10, b: 28 } as const;
+
+export function channelCenterX(index: number, plotWidth: number, padLeft = CHART_PAD.l): number {
+  return padLeft + ((index + 0.5) / CHANNEL_COUNT) * plotWidth;
+}
+
+export function channelBarRect(
+  index: number,
+  plotWidth: number,
+  plotHeight: number,
+  value: number,
+  padLeft = CHART_PAD.l,
+): { x: number; y: number; w: number; h: number } {
+  const groupW = plotWidth / CHANNEL_COUNT;
+  const barW = Math.max(4, groupW * 0.62);
+  const v = Math.max(0, Math.min(1, value));
+  const bh = Math.max(1, v * plotHeight);
+  return {
+    x: padLeft + index * groupW + (groupW - barW) / 2,
+    y: CHART_PAD.t + plotHeight - bh,
+    w: barW,
+    h: bh,
+  };
+}
+
 function setupCanvas(canvas: HTMLCanvasElement): {
   ctx: CanvasRenderingContext2D;
   w: number;
@@ -23,8 +50,6 @@ function setupCanvas(canvas: HTMLCanvasElement): {
   return { ctx, w: cssW, h: cssH };
 }
 
-const PAD = { l: 52, r: 14, t: 18, b: 40 };
-
 function drawAxes(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -32,28 +57,30 @@ function drawAxes(
   xLabel: string,
   yLabel: string,
   highContrast: boolean,
+  simple = false,
 ): void {
-  const plotW = w - PAD.l - PAD.r;
-  const plotH = h - PAD.t - PAD.b;
+  const plotW = w - CHART_PAD.l - CHART_PAD.r;
+  const plotH = h - CHART_PAD.t - CHART_PAD.b;
   ctx.strokeStyle = highContrast ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.18)';
   ctx.fillStyle = highContrast ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.55)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(PAD.l, PAD.t);
-  ctx.lineTo(PAD.l, PAD.t + plotH);
-  ctx.lineTo(PAD.l + plotW, PAD.t + plotH);
+  ctx.moveTo(CHART_PAD.l, CHART_PAD.t);
+  ctx.lineTo(CHART_PAD.l, CHART_PAD.t + plotH);
+  ctx.lineTo(CHART_PAD.l + plotW, CHART_PAD.t + plotH);
   ctx.stroke();
 
-  ctx.font = '11px ui-monospace, monospace';
+  ctx.font = simple ? '12px ui-sans-serif, system-ui, sans-serif' : '11px ui-monospace, monospace';
   ctx.textAlign = 'center';
-  for (let j = 0; j < 12; j += 1) {
-    const x = PAD.l + (j / 11) * plotW;
-    ctx.fillText(String(j), x, h - 18);
+  if (!simple) {
+    for (let j = 0; j < CHANNEL_COUNT; j += 1) {
+      ctx.fillText(String(j), channelCenterX(j, plotW), h - 10);
+    }
   }
-  ctx.fillText(xLabel, PAD.l + plotW / 2, h - 4);
+  ctx.fillText(xLabel, CHART_PAD.l + plotW / 2, h - (simple ? 10 : 2));
 
   ctx.save();
-  ctx.translate(14, PAD.t + plotH / 2);
+  ctx.translate(14, CHART_PAD.t + plotH / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = 'center';
   ctx.fillText(yLabel, 0, 0);
@@ -71,29 +98,41 @@ export function drawChannelChart(
     highContrast?: boolean;
     reducedMotion?: boolean;
     showDots?: boolean;
+    /** Junior: shape/pattern only, no dense channel indices. */
+    simple?: boolean;
+    /** Channel indices to outline as obviously different. */
+    emphasizeIndices?: readonly number[];
+    emphasizeColor?: string;
   },
 ): void {
   const setup = setupCanvas(canvas);
   if (!setup) return;
   const { ctx, w, h } = setup;
   const hc = Boolean(options.highContrast);
-  const plotW = w - PAD.l - PAD.r;
-  const plotH = h - PAD.t - PAD.b;
+  const plotW = w - CHART_PAD.l - CHART_PAD.r;
+  const plotH = h - CHART_PAD.t - CHART_PAD.b;
 
-  drawAxes(ctx, w, h, options.xLabel, options.yLabel, hc);
+  drawAxes(ctx, w, h, options.xLabel, options.yLabel, hc, Boolean(options.simple));
 
   if (options.bars) {
-    const groupW = plotW / 12;
-    const barW = Math.max(6, groupW * 0.55);
-    for (let j = 0; j < 12; j += 1) {
-      const v = Math.max(0, Math.min(1, options.bars.values[j] ?? 0));
-      const bh = v * plotH;
-      const x = PAD.l + j * groupW + (groupW - barW) / 2;
-      ctx.fillStyle = options.bars.color;
-      ctx.globalAlpha = 0.35;
-      ctx.fillRect(x, PAD.t + plotH - bh, barW, bh);
-      ctx.globalAlpha = 1;
+    ctx.fillStyle = options.bars.color;
+    ctx.globalAlpha = 0.35;
+    for (let j = 0; j < CHANNEL_COUNT; j += 1) {
+      const bar = channelBarRect(j, plotW, plotH, options.bars.values[j] ?? 0);
+      ctx.fillRect(bar.x, bar.y, bar.w, bar.h);
     }
+    ctx.globalAlpha = 1;
+  }
+
+  if (options.emphasizeIndices?.length) {
+    ctx.strokeStyle = options.emphasizeColor ?? '#ee7b66';
+    ctx.lineWidth = hc ? 3 : 2.4;
+    ctx.globalAlpha = 0.95;
+    for (const j of options.emphasizeIndices) {
+      const bar = channelBarRect(j, plotW, plotH, Math.max(options.bars?.values[j] ?? options.curves[0]?.values[j] ?? 0.15, 0.12));
+      ctx.strokeRect(bar.x - 1, bar.y - 2, bar.w + 2, bar.h + 4);
+    }
+    ctx.globalAlpha = 1;
   }
 
   if (options.residualAgainst) {
@@ -101,15 +140,15 @@ export function drawChannelChart(
     ctx.fillStyle = color;
     ctx.globalAlpha = 0.22;
     ctx.beginPath();
-    for (let j = 0; j < 12; j += 1) {
-      const x = PAD.l + (j / 11) * plotW;
-      const y = PAD.t + plotH - Math.max(0, Math.min(1, target[j] ?? 0)) * plotH;
+    for (let j = 0; j < CHANNEL_COUNT; j += 1) {
+      const x = channelCenterX(j, plotW);
+      const y = CHART_PAD.t + plotH - Math.max(0, Math.min(1, target[j] ?? 0)) * plotH;
       if (j === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
-    for (let j = 11; j >= 0; j -= 1) {
-      const x = PAD.l + (j / 11) * plotW;
-      const y = PAD.t + plotH - Math.max(0, Math.min(1, guess[j] ?? 0)) * plotH;
+    for (let j = CHANNEL_COUNT - 1; j >= 0; j -= 1) {
+      const x = channelCenterX(j, plotW);
+      const y = CHART_PAD.t + plotH - Math.max(0, Math.min(1, guess[j] ?? 0)) * plotH;
       ctx.lineTo(x, y);
     }
     ctx.closePath();
@@ -121,9 +160,9 @@ export function drawChannelChart(
     ctx.strokeStyle = series.color;
     ctx.lineWidth = hc ? 2.5 : 2;
     ctx.beginPath();
-    for (let j = 0; j < 12; j += 1) {
-      const x = PAD.l + (j / 11) * plotW;
-      const y = PAD.t + plotH - Math.max(0, Math.min(1, series.values[j] ?? 0)) * plotH;
+    for (let j = 0; j < CHANNEL_COUNT; j += 1) {
+      const x = channelCenterX(j, plotW);
+      const y = CHART_PAD.t + plotH - Math.max(0, Math.min(1, series.values[j] ?? 0)) * plotH;
       if (j === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
@@ -131,9 +170,9 @@ export function drawChannelChart(
 
     if (options.showDots !== false) {
       ctx.fillStyle = series.color;
-      for (let j = 0; j < 12; j += 1) {
-        const x = PAD.l + (j / 11) * plotW;
-        const y = PAD.t + plotH - Math.max(0, Math.min(1, series.values[j] ?? 0)) * plotH;
+      for (let j = 0; j < CHANNEL_COUNT; j += 1) {
+        const x = channelCenterX(j, plotW);
+        const y = CHART_PAD.t + plotH - Math.max(0, Math.min(1, series.values[j] ?? 0)) * plotH;
         ctx.beginPath();
         ctx.arc(x, y, options.reducedMotion ? 2.5 : 3.2, 0, Math.PI * 2);
         ctx.fill();
@@ -146,67 +185,28 @@ export function drawSignatureHint(
   canvas: HTMLCanvasElement,
   values: readonly number[],
   highContrast = false,
+  labels?: { xLabel: string; yLabel: string; simple?: boolean },
 ): void {
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth || 280;
-  const cssH = canvas.clientHeight || 72;
-  canvas.width = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cssW, cssH);
-
-  const pad = { l: 4, r: 4, t: 6, b: 14 };
-  const plotW = cssW - pad.l - pad.r;
-  const plotH = cssH - pad.t - pad.b;
-  const n = 12;
-  const gap = 2;
-  const barW = Math.max(4, (plotW - gap * (n - 1)) / n);
-  const color = highContrast ? '#111' : '#c4a35a';
-  const muted = highContrast ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.28)';
-
-  ctx.strokeStyle = muted;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(pad.l, pad.t + plotH);
-  ctx.lineTo(pad.l + plotW, pad.t + plotH);
-  ctx.stroke();
-
-  for (let j = 0; j < n; j += 1) {
-    const v = Math.max(0, Math.min(1, values[j] ?? 0));
-    const h = Math.max(1, v * plotH);
-    const x = pad.l + j * (barW + gap);
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.35 + v * 0.65;
-    ctx.fillRect(x, pad.t + plotH - h, barW, h);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = muted;
-    ctx.font = '9px ui-monospace, monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(String(j), x + barW / 2, cssH - 2);
-  }
-
-  // Peak markers for the top 2 channels
-  const ranked = values
-    .map((v, i) => ({ v, i }))
-    .sort((a, b) => b.v - a.v)
-    .slice(0, 2);
-  ctx.fillStyle = highContrast ? '#000' : '#ffe9a8';
-  ctx.font = 'bold 10px ui-monospace, monospace';
-  for (const p of ranked) {
-    const x = pad.l + p.i * (barW + gap) + barW / 2;
-    const y = pad.t + plotH - Math.max(0, Math.min(1, p.v)) * plotH - 2;
-    ctx.beginPath();
-    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  drawChannelChart(canvas, {
+    bars: { values, color: highContrast ? '#444' : '#5ec4d1' },
+    curves: [{ values, color: highContrast ? '#111' : '#c4a35a' }],
+    xLabel: labels?.xLabel ?? '',
+    yLabel: labels?.yLabel ?? '',
+    highContrast,
+    simple: labels?.simple ?? true,
+  });
 }
 
 export function channelSummaryText(
   values: readonly number[],
   locale: 'zh-Hant' | 'en',
+  simple = false,
 ): string {
+  if (simple) {
+    return locale === 'zh-Hant'
+      ? '\u770b\u5716\u6a23\u7684\u5c71\u5cf0\u8207\u8c37\u5e95\u2014\u2014\u9019\u4e9b\u662f\u53d7\u9ad4\u53cd\u61c9\u901a\u9053\uff0c\u4e0d\u662f\u5149\u8b5c\u3002'
+      : 'Look at the peaks and valleys. These are receptor-response channels, not a light spectrum.';
+  }
   const peaks = values
     .map((v, i) => ({ v, i }))
     .sort((a, b) => b.v - a.v)

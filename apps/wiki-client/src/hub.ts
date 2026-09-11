@@ -60,23 +60,29 @@ function paintHub(): void {
     {
       step: '01',
       href: './games/pixel/index.html',
+      scienceHref: './games/pixel/index.html#science',
       meta: copy.hub.games.pixel,
       progress: snap.pixel,
       testid: 'card-pixel',
+      game: 'pixel',
     },
     {
       step: '02',
       href: './games/labyrinth/index.html',
+      scienceHref: './games/labyrinth/index.html#science',
       meta: copy.hub.games.game2,
       progress: snap.labyrinth,
       testid: 'card-labyrinth',
+      game: 'labyrinth',
     },
     {
       step: '03',
       href: './games/spectrum/index.html',
+      scienceHref: './games/spectrum/index.html#science',
       meta: copy.hub.games.game3,
       progress: snap.spectrum,
       testid: 'card-spectrum',
+      game: 'spectrum',
     },
   ];
 
@@ -87,22 +93,33 @@ function paintHub(): void {
       <p>${copy.hub.lead}</p>
     </section>
 
+    <section class="hub-educators" data-testid="hub-educators" aria-labelledby="hub-educators-title">
+      <h2 id="hub-educators-title">${copy.hub.educatorsTitle}</h2>
+      <p>${copy.hub.educatorsLead}</p>
+      <a class="text-button" href="./education/index.html#for-educators">${copy.hub.educatorsLink}</a>
+    </section>
+
     <section class="hub-grid" aria-label="${copy.hub.heading}">
       ${games
-        .map(
-          (g) => `
-        <a class="game-card-link hub-card" href="${g.href}" data-testid="${g.testid}" data-game="${g.step === '01' ? 'pixel' : g.step === '02' ? 'labyrinth' : 'spectrum'}">
+        .map((g) => {
+          const titleId = `hub-title-${g.game}`;
+          return `
+        <article class="game-card-link hub-card" data-testid="${g.testid}" aria-labelledby="${titleId}">
           <span class="section-label">${copy.hub.gameLabel} ${g.step}</span>
-          <h2>${g.meta.title}</h2>
+          <h2 id="${titleId}">${g.meta.title}</h2>
           <p>${g.meta.blurb}</p>
           <ul class="hub-card-meta">
             <li><span>${copy.hub.duration}</span> ${g.meta.duration}</li>
-            <li><span>${copy.hub.solo}</span> ${copy.hub.solo}</li>
+            <li><span>${copy.hub.level}</span> ${g.meta.level}</li>
+            <li><span>${copy.hub.concept}</span> ${g.meta.concept}</li>
             <li>${progressLabel(g.progress, copy)}</li>
           </ul>
-          <span class="game-status">${copy.hub.play}</span>
-        </a>`,
-        )
+          <div class="hub-card-actions">
+            <a class="primary-button" href="${g.href}" data-game="${g.game}" data-testid="play-${g.game}" aria-label="${copy.hub.playAria}: ${g.meta.title}">${copy.hub.play}</a>
+            <a class="ghost-button" href="${g.scienceHref}" data-testid="science-${g.game}" aria-label="${copy.hub.scienceAria}: ${g.meta.title}">${copy.hub.science}</a>
+          </div>
+        </article>`;
+        })
         .join('')}
     </section>
   `;
