@@ -13,8 +13,8 @@ import {
 describe('labyrinth vision geometry', () => {
   it('exports the product vision constants', () => {
     expect(VISION_HALO_RADIUS).toBe(0.8);
-    expect(VISION_FLASHLIGHT_RANGE).toBe(6);
-    expect(VISION_FLASHLIGHT_FOV_DEG).toBe(70);
+    expect(VISION_FLASHLIGHT_RANGE).toBe(7);
+    expect(VISION_FLASHLIGHT_FOV_DEG).toBe(64);
   });
 
   it('stops rays at walls (does not pass through)', () => {
@@ -48,6 +48,17 @@ describe('labyrinth vision geometry', () => {
 
     const behindFar = { x: 10.5 - 3, y: 6.5 };
     expect(isPointLit(MAP_V1, origin, facing, behindFar)).toBe(false);
+  });
+
+  it('lights the wall face the flashlight hits', () => {
+    const origin = { x: 3.5, y: 6.5 };
+    const facing = -Math.PI / 2;
+    const wallHit = castRay(MAP_V1, origin, facing, 10);
+    expect(wallHit.hitWall).toBe(true);
+    const wallPoint = { x: Math.floor(wallHit.hitX) + 0.5, y: Math.floor(wallHit.hitY) + 0.5 };
+    expect(
+      isPointLit(MAP_V1, origin, facing, wallPoint, { haloRadius: 8, coneRange: 10 }),
+    ).toBe(true);
   });
 
   it('castVisibility reports ray counts and cone within FOV', () => {

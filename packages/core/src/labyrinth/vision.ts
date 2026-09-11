@@ -31,6 +31,8 @@ export type VisionCastOptions = {
   coneRange?: number;
   /** Full cone width in radians. */
   coneFovRad?: number;
+  /** DDA step in tiles. Larger is cheaper; default keeps test accuracy. */
+  rayStep?: number;
 };
 
 export type VisionCastResult = {
@@ -58,10 +60,10 @@ export function castRay(
   origin: VisionPoint,
   angle: number,
   maxDist: number,
+  step = 0.05,
 ): RayHit {
   const dx = Math.cos(angle);
   const dy = Math.sin(angle);
-  const step = 0.05;
   let dist = 0;
   let x = origin.x;
   let y = origin.y;
@@ -112,19 +114,20 @@ export function castVisibility(
   const haloRadius = options.haloRadius ?? VISION_HALO_RADIUS;
   const coneRange = options.coneRange ?? VISION_FLASHLIGHT_RANGE;
   const coneFov = options.coneFovRad ?? flashlightFovRad();
+  const step = options.rayStep ?? 0.05;
 
   const coneRays: RayHit[] = [];
   const half = coneFov / 2;
   for (let i = 0; i < coneRayCount; i += 1) {
     const t = coneRayCount === 1 ? 0.5 : i / (coneRayCount - 1);
     const angle = facing - half + t * coneFov;
-    coneRays.push(castRay(map, origin, angle, coneRange));
+    coneRays.push(castRay(map, origin, angle, coneRange, step));
   }
 
   const haloRays: RayHit[] = [];
   for (let i = 0; i < haloRayCount; i += 1) {
     const angle = (i / haloRayCount) * Math.PI * 2;
-    haloRays.push(castRay(map, origin, angle, haloRadius));
+    haloRays.push(castRay(map, origin, angle, haloRadius, step));
   }
 
   return {
@@ -147,15 +150,23 @@ export function isPointLit(
   const haloRadius = options.haloRadius ?? VISION_HALO_RADIUS;
   const coneRange = options.coneRange ?? VISION_FLASHLIGHT_RANGE;
   const coneFov = options.coneFovRad ?? flashlightFovRad();
+  const step = options.rayStep ?? 0.05;
 
   const dx = point.x - origin.x;
   const dy = point.y - origin.y;
   const dist = Math.hypot(dx, dy);
+  if (dist > Math.max(haloRadius, coneRange) + 0.02) return false;
   if (dist < 1e-6) return true;
 
   const angle = Math.atan2(dy, dx);
-  const hit = castRay(map, origin, angle, dist + 0.01);
-  if (hit.hitWall && hit.distance < dist - 0.02) return false;
+  const hit = castRay(map, origin, angle, dist + 0.01, step);
+  if (hit.hitWall && hit.distance < dist - 0.02) {
+    const hitTx = Math.floor(hit.hitX);
+    const hitTy = Math.floor(hit.hitY);
+    const ptTx = Math.floor(point.x);
+    const ptTy = Math.floor(point.y);
+    if (hitTx !== ptTx || hitTy !== ptTy) return false;
+  }
 
   if (dist <= haloRadius) return true;
 
