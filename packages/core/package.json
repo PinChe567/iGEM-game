@@ -19,6 +19,14 @@
     "./spectrum": {
       "types": "./src/spectrum/index.ts",
       "import": "./src/spectrum/index.ts"
+    },
+    "./qc-shift": {
+      "types": "./src/qc-shift/index.ts",
+      "import": "./src/qc-shift/index.ts"
+    },
+    "./education": {
+      "types": "./src/education/index.ts",
+      "import": "./src/education/index.ts"
     }
   },
   "scripts": {
