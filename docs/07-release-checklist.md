@@ -5,7 +5,7 @@ Use before any claim of Wiki readiness. Checkboxes are process gates; automation
 ## Content
 
 - [ ] zh-Hant + en strings proofread on hub, about, all three games
-- [ ] Learning path labels match: Pattern Recognition → Identity & Path Deduction → Mixture Inference
+- [ ] Learning path labels match: Pattern Recognition → QC Shift (screening) → Scent Mixer
 - [ ] Science / Model Limits copy does not claim wet-lab measurements or real concentration readout
 
 ## Science review

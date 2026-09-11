@@ -1,7 +1,9 @@
 # iGEM Wiki integration
 
-**Product:** Odor Pixel Suite (Game 1 Pattern Recognition · Game 2 Identity & Path Deduction · Game 3 Mixture Inference)  
+**Product:** Odor Pixel Suite (Game 1 Pattern Recognition · Game 2 AeroSense QC Shift · Game 3 Scent Mixer)  
 **Constraint:** static Wiki deploy only — **no online backend**, **no Service Worker registration**.
+
+The three games are **educational illustrative models**. They do not validate AeroSense sensor performance.
 
 ## What `apps/wiki-client/dist` contains
 
@@ -9,15 +11,16 @@ After `npm run build:wiki`, Vite writes a multi-page static site with `base: './
 
 | Path (under `dist/`) | Role |
 |----------------------|------|
-| `index.html` | Suite hub + learning path + Explorer Level |
+| `index.html` | Suite hub (purpose, duration, level, concept, Play, Science) |
 | `about/index.html` | Science / Model Limits / Media Credits / Privacy |
-| `team/index.html` | Team roster (data-driven; empty until team fills catalog) |
+| `education/index.html` | Education activities + For educators |
+| `education-games/*` | Downloadable Markdown educator pack |
+| `team/index.html` | Team roster (source exists; add to Vite input to ship) |
 | `attributions/index.html` | Official iGEM attributions iframe wrapper (`site.json`) |
-| `human-practices/index.html` | Human Practices Integration Loop |
-| `education/index.html` | Education activities with evaluation structure |
+| `human-practices/index.html` | Human Practices Integration Loop (source exists; add to Vite input to ship) |
 | `404.html` | Static not-found + asset-error guidance |
 | `games/pixel/index.html` | Game 1 |
-| `games/labyrinth/index.html` | Game 2 wiki solo |
+| `games/labyrinth/index.html` | Game 2 QC Shift (URL preserved) |
 | `games/spectrum/index.html` | Game 3 |
 | `games/labyrinth-validator/index.html` | Dev map validator (optional to omit from public Wiki) |
 | `games/spectrum-visualizer/index.html` | Dev visualizer (gated / optional omit) |
